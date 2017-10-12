@@ -1,10 +1,12 @@
 extern crate image;
+extern crate imageproc;
 extern crate rand;
 
 use std::cmp;
 use std::path::Path;
 
 use image::{GenericImage, ImageBuffer, Pixel, Rgb};
+use imageproc::drawing::draw_line_segment;
 use rand::distributions::{IndependentSample, Range};
 
 fn euc<P: Pixel<Subpixel = u8>>(p1: P, p2: P) -> u64 {
@@ -48,8 +50,28 @@ fn diff<P, T>(img1: &T, img2: &T, p1: (u32, u32), p2: (u32, u32)) -> Option<u64>
     Some(d)
 }
 
+fn diffa<P, T>(img1: &T, img2: &T) -> Option<u64>
+    where P: Pixel<Subpixel = u8>,
+          T: GenericImage<Pixel = P> {
+    let mut d = 0;
+
+    if img1.dimensions() != img2.dimensions() {
+        return None;
+    }
+
+    let (w, h) = img1.dimensions();
+
+    for x in 0..w {
+        for y in 0..h {
+            d += euc(img1.get_pixel(x, y), img2.get_pixel(x, y));
+        }
+    }
+
+    Some(d)
+}
+
 fn main() {
-    let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
+    let mut img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
     let (w, h) = img.dimensions();
 
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
@@ -58,20 +80,68 @@ fn main() {
     let h_range = Range::new(0, h);
     let mut rng = rand::thread_rng();
 
-    for _ in 1..50_000 {
+    for i in 0..20_000 {
+        if (i % 1000 == 0) {
+            println!("{}", i);
+        }
+
         let (pick_x, pick_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
-        let (set_x, set_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        // let (pick_x, pick_y) = (200u32, 200u32);
 
-        let pix = img.get_pixel(pick_x, pick_y);
+        let source_pixel = img.get_pixel(pick_x, pick_y).clone();
 
-        let mut buf2 = buf.clone();
+        // println!("source: {}, {}", pick_x, pick_y);
 
-        let before_dist = diff(&img, &buf, (set_x, pick_y), (set_x, set_y)).unwrap();
-        buf2.put_pixel(set_x, set_y, pix.clone());
-        let after_dist = diff(&img, &buf2, (set_x, pick_y), (set_x, set_y)).unwrap();
+        // get the section of the buffer to adjust
+        let (dest_x1, dest_y1) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        let (dest_x2, dest_y2) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+
+        // let (dest_x1, dest_y1) = (100u32, 120u32);
+        // let (dest_x2, dest_y2) = (150u32, 80u32);
+
+
+        // println!("dest_1: {}, {}", dest_x1, dest_y1);
+        // println!("dest_2: {}, {}", dest_x2, dest_y2);
+
+        let dest_minx = cmp::min(dest_x1, dest_x2);
+        let dest_miny = cmp::min(dest_y1, dest_y2);
+
+        // println!("dest_min: {}, {}", dest_minx, dest_miny);
+
+        let dest_maxx = cmp::max(dest_x1, dest_x2);
+        let dest_maxy = cmp::max(dest_y1, dest_y2);
+
+        // println!("dest_max: {}, {}", dest_maxx, dest_maxy);
+
+        let dest_w = (dest_maxx as i32 - dest_minx as i32) as u32;
+        let dest_h = (dest_maxy as i32 - dest_miny as i32) as u32;
+
+        // println!("dest_size: {}, {}", dest_w, dest_h);
+
+        // create a 0,0-based section of the buffer
+        let (norm_x1, norm_y1) = (
+            (dest_x1 as i32 - dest_minx as i32) as f32,
+            (dest_y1 as i32 - dest_miny as i32) as f32
+        );
+        let (norm_x2, norm_y2) = (
+            (dest_x2 as i32 - dest_minx as i32) as f32,
+            (dest_y2 as i32 - dest_miny as i32) as f32
+        );
+
+        // println!("norm_1: {}, {}", norm_x1, norm_y1);
+        // println!("norm_2: {}, {}", norm_x2, norm_y2);
+
+        let img_section = img.sub_image(dest_minx, dest_miny, dest_w, dest_h).to_image();
+        let buf_section = buf.sub_image(dest_minx, dest_miny, dest_w, dest_h).to_image();
+        let mut buf2 = buf_section.clone();
+
+        let buf2 = draw_line_segment(&mut buf2, (norm_x1, norm_y1), (norm_x2, norm_y2), source_pixel);
+
+        let before_dist = diffa(&img_section, &buf_section).unwrap();
+        let after_dist = diffa(&img_section, &buf2).unwrap();
 
         if after_dist < before_dist {
-            buf = buf2;
+            buf.copy_from(&buf2, dest_minx, dest_miny);
         }
     }
 
