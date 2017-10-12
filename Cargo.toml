@@ -5,3 +5,4 @@ authors = ["Anthony Nguyen <anknguyen@gmail.com>"]
 
 [dependencies]
 image = "0.16.0"
+rand = "0.3.17"

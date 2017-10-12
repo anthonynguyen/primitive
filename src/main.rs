@@ -1,9 +1,11 @@
 extern crate image;
+extern crate rand;
 
 use std::cmp;
 use std::path::Path;
 
 use image::{GenericImage, ImageBuffer, Pixel, Rgb};
+use rand::distributions::{IndependentSample, Range};
 
 fn euc<P: Pixel<Subpixel = u8>>(p1: P, p2: P) -> u64 {
     let p1_rgb = p1.to_rgb();
@@ -18,7 +20,7 @@ fn euc<P: Pixel<Subpixel = u8>>(p1: P, p2: P) -> u64 {
       (c2[2] as i32 - c1[2] as i32).pow(2)) as f64).sqrt() as u64
 }
 
-fn diff<P, T>(img1: T, img2: T, p1: (u32, u32), p2: (u32, u32)) -> Option<u64>
+fn diff<P, T>(img1: &T, img2: &T, p1: (u32, u32), p2: (u32, u32)) -> Option<u64>
     where P: Pixel<Subpixel = u8>,
           T: GenericImage<Pixel = P> {
     let (x1, y1) = p1;
@@ -50,7 +52,28 @@ fn main() {
     let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
     let (w, h) = img.dimensions();
 
-    let buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
+    let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
 
-    println!("{:?}", diff(img, buf, (0, 0), (w - 1, h - 1)));
+    let w_range = Range::new(0, w);
+    let h_range = Range::new(0, h);
+    let mut rng = rand::thread_rng();
+
+    for _ in 1..50_000 {
+        let (pick_x, pick_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        let (set_x, set_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+
+        let pix = img.get_pixel(pick_x, pick_y);
+
+        let mut buf2 = buf.clone();
+
+        let before_dist = diff(&img, &buf, (set_x, pick_y), (set_x, set_y)).unwrap();
+        buf2.put_pixel(set_x, set_y, pix.clone());
+        let after_dist = diff(&img, &buf2, (set_x, pick_y), (set_x, set_y)).unwrap();
+
+        if after_dist < before_dist {
+            buf = buf2;
+        }
+    }
+
+    let _ = buf.save(&Path::new("test.png")).unwrap();
 }
