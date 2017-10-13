@@ -70,8 +70,32 @@ fn diffa<P, T>(img1: &T, img2: &T) -> Option<u64>
     Some(d)
 }
 
+fn len(p1: (u32, u32), p2: (u32, u32)) -> u32 {
+    (((p2.0 - p1.0).pow(2) + (p2.1 - p1.1).pow(2)) as f64).sqrt() as u32
+}
+
+fn line(w: &Range<u32>, h: &Range<u32>, rng: &mut rand::ThreadRng) -> ((u32, u32), (u32, u32)) {
+    let mut done: bool = false;
+
+    let mut x1: u32 = 0;
+    let mut x2: u32 = 0;
+    let mut y1: u32 = 0;
+    let mut y2: u32 = 0;
+
+    while !done {
+        x1 = w.ind_sample(rng);
+        y1 = h.ind_sample(rng);
+        x2 = w.ind_sample(rng);
+        y2 = h.ind_sample(rng);
+
+        done = len((x1, y1), (x2, y2)) <= 70;
+    }
+
+    ((x1, y1), (x2, y2))
+}
+
 fn main() {
-    let mut img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
+    let mut img = image::open(&Path::new("clown_small.jpg")).unwrap().to_rgb();
     let (w, h) = img.dimensions();
 
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
@@ -80,9 +104,10 @@ fn main() {
     let h_range = Range::new(0, h);
     let mut rng = rand::thread_rng();
 
-    for i in 0..20_000 {
-        if (i % 1000 == 0) {
+    for i in 0..500_000 {
+        if i % 1_000 == 0 {
             println!("{}", i);
+            // let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
         }
 
         let (pick_x, pick_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
@@ -93,8 +118,10 @@ fn main() {
         // println!("source: {}, {}", pick_x, pick_y);
 
         // get the section of the buffer to adjust
-        let (dest_x1, dest_y1) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
-        let (dest_x2, dest_y2) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        // let (dest_x1, dest_y1) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        // let (dest_x2, dest_y2) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+
+        let ((dest_x1, dest_y1), (dest_x2, dest_y2)) = line(&w_range, &h_range, &mut rng);
 
         // let (dest_x1, dest_y1) = (100u32, 120u32);
         // let (dest_x2, dest_y2) = (150u32, 80u32);
