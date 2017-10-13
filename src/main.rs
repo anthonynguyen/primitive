@@ -62,7 +62,7 @@ fn run(iterations: usize, print_iter: bool) {
 
         let source_pixel = img.get_pixel(pick_x, pick_y).clone();
 
-        let ((dest_x1, dest_y1), (dest_x2, dest_y2)) = gen.line(10);
+        let ((dest_x1, dest_y1), (dest_x2, dest_y2)) = gen.line(25);
 
         let dest_minx = cmp::min(dest_x1, dest_x2);
         let dest_miny = cmp::min(dest_y1, dest_y2);
@@ -122,6 +122,6 @@ fn bench() {
 }
 
 fn main() {
-    run(1_000_000, true);
-    // bench();
+    // run(1_000_000, true);
+    bench();
 }

@@ -11,7 +11,6 @@ pub struct Generator {
     xrange: Range<u32>,
     yrange: Range<u32>,
 
-    // angle range
     arange: Range<u32>,
 
     rng: ThreadRng
@@ -37,10 +36,6 @@ impl Generator {
 
             rng
         }
-    }
-
-    fn dist(p1: (u32, u32), p2: (u32, u32)) -> u32 {
-        (((p2.0 - p1.0).pow(2) + (p2.1 - p1.1).pow(2)) as f64).sqrt() as u32
     }
 
     fn angle(&mut self) -> u32 {
