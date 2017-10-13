@@ -1,4 +1,6 @@
 extern crate chrono;
+#[macro_use]
+extern crate error_chain;
 extern crate image;
 extern crate rand;
 
@@ -10,8 +12,11 @@ mod bresenham;
 mod distance;
 mod generator;
 
-fn run(iterations: u32, print_iter: bool) {
-    let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
+mod errors;
+use errors::*;
+
+fn run(iterations: u32, print_iter: bool) -> Result<()> {
+    let img = image::open(&Path::new("example_s.png"))?.to_rgb();
 
     let (w, h) = img.dimensions();
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
@@ -20,7 +25,7 @@ fn run(iterations: u32, print_iter: bool) {
     for i in 0..iterations {
         if print_iter && i % 10_000 == 0 {
             println!("{}", i);
-            let _ = buf.save(&Path::new(&format!("output/{:07}.jpg", i / 10_000))).unwrap();
+            buf.save(&Path::new(&format!("output/{:07}.jpg", i / 10_000)))?;
         }
 
         let (sample_x, sample_y) = gen.point();
@@ -44,10 +49,12 @@ fn run(iterations: u32, print_iter: bool) {
         }
     }
 
-    let _ = buf.save(&Path::new("test.png")).unwrap();
+    buf.save(&Path::new("test.png"))?;
+
+    Ok(())
 }
 
-fn bench() {
+fn bench() -> Result<()> {
     let num_outer_iter = 10;
     let num_inner_iter = 100_000;
 
@@ -56,19 +63,33 @@ fn bench() {
     let start_time = chrono::Utc::now();
 
     for i in 0..num_outer_iter {
-        run(num_inner_iter, false);
+        run(num_inner_iter, false)?;
         println!("Iteration {}/{} done", i + 1, num_outer_iter);
     }
 
     let end_time = chrono::Utc::now();
     let elapsed = end_time.signed_duration_since::<chrono::Utc>(start_time);
-    let nanos = elapsed.num_nanoseconds().unwrap();
+    let nanos = elapsed.num_nanoseconds().ok_or_else(|| "Couldn't get nanos")?;
 
     println!("{} iterations completed in {}", num_iter, elapsed);
-    println!("{} ns/iter", nanos as f64 / num_iter as f64)
+    println!("{} ns/iter", nanos as f64 / num_iter as f64);
+
+    Ok(())
 }
 
 fn main() {
-    // run(1_000_000, true);
-    bench();
+    // if let Err(e) = run(1_000_000, true) {
+    if let Err(e) = bench() {
+        eprintln!("{}", e);
+
+        for e in e.iter().skip(1) {
+            eprintln!("Caused by: {}", e);
+        }
+
+        if let Some(backtrace) = e.backtrace() {
+            eprintln!("Backtrace: {:?}", backtrace);
+        }
+
+        std::process::exit(1);
+    }
 }
