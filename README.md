@@ -2,13 +2,14 @@
 
 [![primitive on Travis CI][travis-image]][travis]
 [![primitive on crates.io][cratesio-image]][cratesio]
-![primitive license][license-image]
+[![primitive license][license-image]][license]
 
 [travis-image]: https://travis-ci.org/anthonynguyen/primitive.svg?branch=master
 [travis]: https://travis-ci.org/anthonynguyen/primitive
 [cratesio-image]: https://img.shields.io/crates/v/primitive.svg
 [cratesio]: https://crates.io/crates/primitive
 [license-image]: https://img.shields.io/github/license/anthonynguyen/primitive.svg
+[license]: https://github.com/anthonynguyen/primitive/blob/master/LICENSE
 
 primitive is a Rust program that approximates images by drawing random lines.
 
