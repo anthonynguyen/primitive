@@ -1,3 +1,4 @@
+extern crate chrono;
 extern crate image;
 extern crate imageproc;
 extern crate rand;
@@ -88,14 +89,14 @@ fn line(w: &Range<u32>, h: &Range<u32>, rng: &mut rand::ThreadRng) -> ((u32, u32
         x2 = w.ind_sample(rng);
         y2 = h.ind_sample(rng);
 
-        done = len((x1, y1), (x2, y2)) <= 70;
+        done = len((x1, y1), (x2, y2)) <= 50;
     }
 
     ((x1, y1), (x2, y2))
 }
 
-fn main() {
-    let mut img = image::open(&Path::new("clown_small.jpg")).unwrap().to_rgb();
+fn run(iterations: usize) {
+    let mut img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
     let (w, h) = img.dimensions();
 
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
@@ -104,11 +105,11 @@ fn main() {
     let h_range = Range::new(0, h);
     let mut rng = rand::thread_rng();
 
-    for i in 0..500_000 {
-        if i % 1_000 == 0 {
-            println!("{}", i);
-            // let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
-        }
+    for i in 0..iterations {
+        // if i % 1_000 == 0 {
+        //     println!("{}", i);
+        //     let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
+        // }
 
         let (pick_x, pick_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
         // let (pick_x, pick_y) = (200u32, 200u32);
@@ -173,4 +174,25 @@ fn main() {
     }
 
     let _ = buf.save(&Path::new("test.png")).unwrap();
+}
+
+fn main() {
+    let num_outer_iter = 10;
+    let num_inner_iter = 100_000;
+
+    let num_iter = num_outer_iter * num_inner_iter;
+
+    let start_time = chrono::Utc::now();
+
+    for i in 0..num_outer_iter {
+        run(num_inner_iter);
+        println!("Iteration {}/{} done", i + 1, num_outer_iter);
+    }
+
+    let end_time = chrono::Utc::now();
+    let elapsed = end_time.signed_duration_since::<chrono::Utc>(start_time);
+    let nanos = elapsed.num_nanoseconds().unwrap();
+
+    println!("{} iterations completed in {}", num_iter, elapsed);
+    println!("{}ns/iter", nanos as f64 / num_iter as f64)
 }
