@@ -12,7 +12,7 @@ cargo install primitive
 
 ## Samples
 
-### 1
+**********
 
 [Source](https://www.pexels.com/photo/high-angle-view-of-cityscape-against-cloudy-sky-313782/)
 
@@ -22,6 +22,18 @@ cargo install primitive
 
 ```
 primitive -i sample/sample1_input.png -o sample/sample1_output.png -n 10000000 -l 10
+```
+
+**********
+
+[Source](https://www.pexels.com/photo/autumn-daylight-fall-fog-589841/)
+
+![sample 2 input](sample/sample2_input.png)
+
+![sample 2 output](sample/sample2_output.png)
+
+```
+primitive -i sample/sample2_input.png -o sample/sample2_output.png -n 1000000 -l 40 --min-angle 20 --max-angle 60
 ```
 
 ## Usage
