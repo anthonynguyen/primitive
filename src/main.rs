@@ -2,6 +2,9 @@ extern crate chrono;
 #[macro_use]
 extern crate error_chain;
 extern crate image;
+#[macro_use]
+extern crate log;
+extern crate loglog;
 extern crate rand;
 
 use std::path::Path;
@@ -22,9 +25,9 @@ fn run(iterations: u32, print_iter: bool) -> Result<()> {
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
     let mut gen = generator::Generator::new(w, h, 0, 360);
 
-    for i in 0..iterations {
+    for i in 0..iterations + 1 {
         if print_iter && i % 10_000 == 0 {
-            println!("{}", i);
+            debug!("{:02}% ({}/{})", (i as f32 / iterations as f32 * 100f32) as u8, i, iterations);
             buf.save(&Path::new(&format!("output/{:07}.jpg", i / 10_000)))?;
         }
 
@@ -64,30 +67,35 @@ fn bench() -> Result<()> {
 
     for i in 0..num_outer_iter {
         run(num_inner_iter, false)?;
-        println!("Iteration {}/{} done", i + 1, num_outer_iter);
+        info!("Iteration {}/{} done", i + 1, num_outer_iter);
     }
 
     let end_time = chrono::Utc::now();
     let elapsed = end_time.signed_duration_since::<chrono::Utc>(start_time);
     let nanos = elapsed.num_nanoseconds().ok_or_else(|| "Couldn't get nanos")?;
 
-    println!("{} iterations completed in {}", num_iter, elapsed);
-    println!("{} ns/iter", nanos as f64 / num_iter as f64);
+    info!("{} iterations completed in {}", num_iter, elapsed);
+    info!("{} ns/iter", nanos as f64 / num_iter as f64);
 
     Ok(())
 }
 
 fn main() {
+    loglog::build().target(false).init().unwrap_or_else(|err| {
+        eprintln!("Could not start logger:\n{}", err);
+        std::process::exit(1);
+    });
+
     // if let Err(e) = run(1_000_000, true) {
     if let Err(e) = bench() {
-        eprintln!("{}", e);
+        error!("{}", e);
 
         for e in e.iter().skip(1) {
-            eprintln!("Caused by: {}", e);
+            error!("Caused by: {}", e);
         }
 
         if let Some(backtrace) = e.backtrace() {
-            eprintln!("Backtrace: {:?}", backtrace);
+            error!("Backtrace: {:?}", backtrace);
         }
 
         std::process::exit(1);
