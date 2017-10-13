@@ -60,8 +60,8 @@ impl Generator {
         let lenf64 = len as f64;
 
         let p2 = (
-            self.clamp((angle.cos() * lenf64) as i32 + p1.0 as i32, self.xmax),
-            self.clamp((angle.sin() * lenf64) as i32 + p1.1 as i32, self.ymax)
+            self.clamp((angle.cos() * lenf64) as i32 + p1.0 as i32, self.xmax - 1),
+            self.clamp((angle.sin() * lenf64) as i32 + p1.1 as i32, self.ymax - 1)
         );
 
         (p1, p2)
