@@ -2,6 +2,14 @@
 name = "primitive"
 version = "0.1.0"
 authors = ["Anthony Nguyen <anknguyen@gmail.com>"]
+description = "Approximates images by drawing random lines"
+homepage = "https://github.com/anthonynguyen/primitive"
+documentation = "https://github.com/anthonynguyen/primitive"
+repository = "https://github.com/anthonynguyen/primitive"
+readme = "README.md"
+keywords = ["image", "approximation"]
+categories = ["multimedia::images", "command-line-interface"]
+license = "MIT"
 
 [dependencies]
 chrono = "0.4.0"
