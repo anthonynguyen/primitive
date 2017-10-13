@@ -1,0 +1,15 @@
+language: rust
+sudo: false
+
+cache:
+ directories:
+  - $HOME/.cargo
+
+rust:
+  - stable
+  - nightly
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - rust: nightly
