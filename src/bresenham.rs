@@ -17,9 +17,7 @@ pub fn points(p1: (u32, u32), p2: (u32, u32)) -> Vec<(u32, u32)> {
     loop {
         ret.push((x as u32, y as u32));
 
-        if x == x2 && y == y2 {
-            break;
-        }
+        if x == x2 && y == y2 { break; }
 
         err2 = 2 * err;
 

@@ -16,3 +16,5 @@
     * now choose a point, an angle, and a magnitude and create a line like that
     * let's also arbitrarily say that the average line length before was 25
         + it used to be anything <= 50 but i don't really know stats so...
+3. `~1000ns/ier`
+	* after adding the bresenham line algorithm

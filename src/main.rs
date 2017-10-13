@@ -10,11 +10,8 @@ mod bresenham;
 mod generator;
 
 fn euc<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u64 {
-    let p1_rgb = p1.to_rgb();
-    let p2_rgb = p2.to_rgb();
-
-    let c1 = p1_rgb.channels();
-    let c2 = p2_rgb.channels();
+    let c1 = p1.to_rgb();
+    let c2 = p2.to_rgb();
 
     // we're probably guaranteed that the length = 3
     (((c2[0] as i32 - c1[0] as i32).pow(2) +
@@ -24,8 +21,8 @@ fn euc<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u64 {
 
 fn run(iterations: usize, print_iter: bool) {
     let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
-    let (w, h) = img.dimensions();
 
+    let (w, h) = img.dimensions();
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
     let mut gen = generator::Generator::new(w, h);
 
