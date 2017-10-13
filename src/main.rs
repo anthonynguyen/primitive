@@ -9,27 +9,37 @@ use image::{ImageBuffer, Pixel, Rgb};
 mod bresenham;
 mod generator;
 
-fn euc<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u64 {
+fn euclidean<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u32 {
     let c1 = p1.to_rgb();
     let c2 = p2.to_rgb();
 
     // we're probably guaranteed that the length = 3
     (((c2[0] as i32 - c1[0] as i32).pow(2) +
       (c2[1] as i32 - c1[1] as i32).pow(2) +
-      (c2[2] as i32 - c1[2] as i32).pow(2)) as f64).sqrt() as u64
+      (c2[2] as i32 - c1[2] as i32).pow(2)) as f64).sqrt() as u32
 }
 
-fn run(iterations: usize, print_iter: bool) {
+fn manhattan<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u32 {
+    let c1 = p1.to_rgb();
+    let c2 = p2.to_rgb();
+
+    // we're probably guaranteed that the length = 3
+    ((c2[0] as i32 - c1[0] as i32).abs() +
+     (c2[1] as i32 - c1[1] as i32).abs() +
+     (c2[2] as i32 - c1[2] as i32).abs()) as u32
+}
+
+fn run(iterations: u32, print_iter: bool) {
     let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
 
     let (w, h) = img.dimensions();
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
-    let mut gen = generator::Generator::new(w, h);
+    let mut gen = generator::Generator::new(w, h, 0, 360);
 
     for i in 0..iterations {
         if print_iter && i % 10_000 == 0 {
             println!("{}", i);
-            let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
+            let _ = buf.save(&Path::new(&format!("output/{:07}.jpg", i / 10_000))).unwrap();
         }
 
         let (sample_x, sample_y) = gen.point();
@@ -42,8 +52,8 @@ fn run(iterations: usize, print_iter: bool) {
         let mut after_dist = 0;
         for point in &points {
             let (x, y) = *point;
-            before_dist += euc(img.get_pixel(x, y), buf.get_pixel(x, y));
-            after_dist += euc(img.get_pixel(x, y), &sample_pixel);
+            before_dist += manhattan(img.get_pixel(x, y), buf.get_pixel(x, y));
+            after_dist += manhattan(img.get_pixel(x, y), &sample_pixel);
         }
 
         if after_dist < before_dist {

@@ -17,11 +17,11 @@ pub struct Generator {
 }
 
 impl Generator {
-    pub fn new(xmax: u32, ymax: u32) -> Self {
+    pub fn new(xmax: u32, ymax: u32, amin: u32, amax: u32) -> Self {
         let xrange = Range::new(0, xmax);
         let yrange = Range::new(0, ymax);
 
-        let arange = Range::new(0, 360);
+        let arange = Range::new(amin, amax);
 
         let rng = rand::thread_rng();
 
