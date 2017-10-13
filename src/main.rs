@@ -4,30 +4,11 @@ extern crate rand;
 
 use std::path::Path;
 
-use image::{ImageBuffer, Pixel, Rgb};
+use image::{ImageBuffer, Rgb};
 
 mod bresenham;
+mod distance;
 mod generator;
-
-fn euclidean<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u32 {
-    let c1 = p1.to_rgb();
-    let c2 = p2.to_rgb();
-
-    // we're probably guaranteed that the length = 3
-    (((c2[0] as i32 - c1[0] as i32).pow(2) +
-      (c2[1] as i32 - c1[1] as i32).pow(2) +
-      (c2[2] as i32 - c1[2] as i32).pow(2)) as f64).sqrt() as u32
-}
-
-fn manhattan<P: Pixel<Subpixel = u8>>(p1: &P, p2: &P) -> u32 {
-    let c1 = p1.to_rgb();
-    let c2 = p2.to_rgb();
-
-    // we're probably guaranteed that the length = 3
-    ((c2[0] as i32 - c1[0] as i32).abs() +
-     (c2[1] as i32 - c1[1] as i32).abs() +
-     (c2[2] as i32 - c1[2] as i32).abs()) as u32
-}
 
 fn run(iterations: u32, print_iter: bool) {
     let img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
@@ -52,8 +33,8 @@ fn run(iterations: u32, print_iter: bool) {
         let mut after_dist = 0;
         for point in &points {
             let (x, y) = *point;
-            before_dist += manhattan(img.get_pixel(x, y), buf.get_pixel(x, y));
-            after_dist += manhattan(img.get_pixel(x, y), &sample_pixel);
+            before_dist += distance::manhattan(img.get_pixel(x, y), buf.get_pixel(x, y));
+            after_dist += distance::manhattan(img.get_pixel(x, y), &sample_pixel);
         }
 
         if after_dist < before_dist {
@@ -84,7 +65,7 @@ fn bench() {
     let nanos = elapsed.num_nanoseconds().unwrap();
 
     println!("{} iterations completed in {}", num_iter, elapsed);
-    println!("{}ns/iter", nanos as f64 / num_iter as f64)
+    println!("{} ns/iter", nanos as f64 / num_iter as f64)
 }
 
 fn main() {

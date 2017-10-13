@@ -42,10 +42,6 @@ impl Generator {
         self.arange.ind_sample(&mut self.rng)
     }
 
-    fn clamp(&self, num: i32, max: u32) -> u32 {
-        cmp::min(cmp::max(0, num) as u32, max)
-    }
-
     pub fn point(&mut self) -> (u32, u32) {
         (
             self.xrange.ind_sample(&mut self.rng),
@@ -53,6 +49,9 @@ impl Generator {
         )
     }
 
+    // Generate a random line by generating an initial point, and a displacement
+    // vector. The resulting final point is clamped to fit within the image
+    // boundaries
     pub fn line(&mut self, len: u32) -> ((u32, u32), (u32, u32)) {
         let p1 = self.point();
         let angle = (self.angle() as f64).to_radians();
@@ -60,10 +59,14 @@ impl Generator {
         let lenf64 = len as f64;
 
         let p2 = (
-            self.clamp((angle.cos() * lenf64) as i32 + p1.0 as i32, self.xmax - 1),
-            self.clamp((angle.sin() * lenf64) as i32 + p1.1 as i32, self.ymax - 1)
+            clamp((angle.cos() * lenf64) as i32 + p1.0 as i32, self.xmax - 1),
+            clamp((angle.sin() * lenf64) as i32 + p1.1 as i32, self.ymax - 1)
         );
 
         (p1, p2)
     }
+}
+
+fn clamp(num: i32, max: u32) -> u32 {
+    cmp::min(cmp::max(0, num) as u32, max)
 }
