@@ -8,11 +8,10 @@ extern crate log;
 extern crate loglog;
 extern crate rand;
 
-use std::path::Path;
-
 use image::{ImageBuffer, Rgb};
 
 mod bresenham;
+mod context;
 mod distance;
 mod generator;
 mod settings;
@@ -23,33 +22,29 @@ use errors::*;
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
-fn single(s: &settings::Settings) -> Result<()> {
-    let img = image::open(&Path::new(&s.input_file))?.to_rgb();
+fn single(ctx: &mut context::Context) -> Result<()> {
+    let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(ctx.w, ctx.h);
 
-    let (w, h) = img.dimensions();
-    let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
-    let mut gen = generator::Generator::new(w, h, s.min_angle, s.max_angle);
+    let iter_10 = ctx.settings.iterations / 10;
 
-    let iter_10 = s.iterations / 10;
-
-    for i in 0..s.iterations + 1 {
-        if !s.bench && i % iter_10 == 0 {
-            info!("{:02}% ({}/{})", (i as f32 / s.iterations as f32 * 100f32) as u8, i, s.iterations);
+    for i in 0..ctx.settings.iterations + 1 {
+        if !ctx.settings.bench && i % iter_10 == 0 {
+            info!("{:02}% ({}/{})", (i as f32 / ctx.settings.iterations as f32 * 100f32) as u8, i, ctx.settings.iterations);
             // buf.save(&Path::new(&format!("output/{:07}.jpg", i / 10_000)))?;
         }
 
-        let (sample_x, sample_y) = gen.point();
-        let sample_pixel = img.get_pixel(sample_x, sample_y).clone();
+        let (sample_x, sample_y) = ctx.generator.point();
+        let sample_pixel = ctx.image.get_pixel(sample_x, sample_y).clone();
 
-        let ((x1, y1), (x2, y2)) = gen.line(s.line_length);
+        let ((x1, y1), (x2, y2)) = ctx.generator.line(ctx.settings.line_length);
         let points = bresenham::points((x1, y1), (x2, y2));
 
         let mut before_dist = 0;
         let mut after_dist = 0;
         for point in &points {
             let (x, y) = *point;
-            before_dist += distance::manhattan(img.get_pixel(x, y), buf.get_pixel(x, y));
-            after_dist += distance::manhattan(img.get_pixel(x, y), &sample_pixel);
+            before_dist += distance::manhattan(ctx.image.get_pixel(x, y), buf.get_pixel(x, y));
+            after_dist += distance::manhattan(ctx.image.get_pixel(x, y), &sample_pixel);
         }
 
         if after_dist < before_dist {
@@ -59,22 +54,22 @@ fn single(s: &settings::Settings) -> Result<()> {
         }
     }
 
-    if !s.bench {
-        if let Some(ref fname) = s.output_file {
-            buf.save(&Path::new(fname))?;
+    if !ctx.settings.bench {
+        if let Some(ref fname) = ctx.settings.output_file {
+            buf.save(fname)?;
         }
     }
 
     Ok(())
 }
 
-fn bench(s: &settings::Settings) -> Result<()> {
-    let total_iters = s.bench_iters * s.iterations;
+fn bench(ctx: &mut context::Context) -> Result<()> {
+    let total_iters = ctx.settings.bench_iters * ctx.settings.iterations;
     let start_time = chrono::Utc::now();
 
-    for i in 0..s.bench_iters {
-        single(s)?;
-        info!("Iteration {}/{} done", i + 1, s.bench_iters);
+    for i in 0..ctx.settings.bench_iters {
+        single(ctx)?;
+        info!("Iteration {}/{} done", i + 1, ctx.settings.bench_iters);
     }
 
     let end_time = chrono::Utc::now();
@@ -89,11 +84,12 @@ fn bench(s: &settings::Settings) -> Result<()> {
 
 fn run(matches: clap::ArgMatches) -> Result<()> {
     let s = settings::new(&matches)?;
+    let mut ctx = context::new(s)?;
 
-    if !s.bench {
-        single(&s)
+    if !ctx.settings.bench {
+        single(&mut ctx)
     } else {
-        bench(&s)
+        bench(&mut ctx)
     }
 }
 

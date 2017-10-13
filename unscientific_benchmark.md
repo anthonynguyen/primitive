@@ -30,3 +30,7 @@ cargo run --release -- -i example_s.png -n 100000 --line-length 25 bench --bench
 	* make distance function return u32 instead of u64
 6. `~715 ns/iter`
 	* don't render the output image for each outer iteration! (...)
+7. `~590 ns/iter`
+	* store expensive stuff in a 'context'
+		+ load the source image once (instead of bench_iters times)
+		+ create the rng once (instead of bench_iters times)
