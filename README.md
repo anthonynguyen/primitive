@@ -10,6 +10,20 @@ Assuming you have Rust installed, run
 cargo install primitive
 ```
 
+## Samples
+
+### 1
+
+[Source](https://www.pexels.com/photo/high-angle-view-of-cityscape-against-cloudy-sky-313782/)
+
+![sample 1 input](sample/sample1_input.png)
+
+![sample 1 output](sample/sample1_output.png)
+
+```
+primitive -i sample/sample1_input.png -o sample/sample1_output.png -n 10000000 -l 10
+```
+
 ## Usage
 
 ```
