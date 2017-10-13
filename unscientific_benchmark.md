@@ -10,3 +10,7 @@
 ## results
 
 * `~12000ns/iter`
+* `~1200ns/iter`
+    + after changing line generation function
+    + previously, would keep generating arbitrary lines until they were <= max
+    + now choose a point, an angle, and a magnitude and create a line like that

@@ -8,7 +8,8 @@ use std::path::Path;
 
 use image::{GenericImage, ImageBuffer, Pixel, Rgb};
 use imageproc::drawing::draw_line_segment;
-use rand::distributions::{IndependentSample, Range};
+
+mod generator;
 
 fn euc<P: Pixel<Subpixel = u8>>(p1: P, p2: P) -> u64 {
     let p1_rgb = p1.to_rgb();
@@ -71,47 +72,21 @@ fn diffa<P, T>(img1: &T, img2: &T) -> Option<u64>
     Some(d)
 }
 
-fn len(p1: (u32, u32), p2: (u32, u32)) -> u32 {
-    (((p2.0 - p1.0).pow(2) + (p2.1 - p1.1).pow(2)) as f64).sqrt() as u32
-}
-
-fn line(w: &Range<u32>, h: &Range<u32>, rng: &mut rand::ThreadRng) -> ((u32, u32), (u32, u32)) {
-    let mut done: bool = false;
-
-    let mut x1: u32 = 0;
-    let mut x2: u32 = 0;
-    let mut y1: u32 = 0;
-    let mut y2: u32 = 0;
-
-    while !done {
-        x1 = w.ind_sample(rng);
-        y1 = h.ind_sample(rng);
-        x2 = w.ind_sample(rng);
-        y2 = h.ind_sample(rng);
-
-        done = len((x1, y1), (x2, y2)) <= 50;
-    }
-
-    ((x1, y1), (x2, y2))
-}
-
-fn run(iterations: usize) {
+fn run(iterations: usize, print_iter: bool) {
     let mut img = image::open(&Path::new("example_s.png")).unwrap().to_rgb();
     let (w, h) = img.dimensions();
 
     let mut buf = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(w, h);
 
-    let w_range = Range::new(0, w);
-    let h_range = Range::new(0, h);
-    let mut rng = rand::thread_rng();
+    let mut gen = generator::Generator::new(w, h);
 
     for i in 0..iterations {
-        // if i % 1_000 == 0 {
-        //     println!("{}", i);
-        //     let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
-        // }
+        if print_iter && i % 10_000 == 0 {
+            println!("{}", i);
+            let _ = buf.save(&Path::new(&format!("output/{:04}.jpg", i / 1000))).unwrap();
+        }
 
-        let (pick_x, pick_y) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
+        let (pick_x, pick_y) = gen.point();
         // let (pick_x, pick_y) = (200u32, 200u32);
 
         let source_pixel = img.get_pixel(pick_x, pick_y).clone();
@@ -122,7 +97,7 @@ fn run(iterations: usize) {
         // let (dest_x1, dest_y1) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
         // let (dest_x2, dest_y2) = (w_range.ind_sample(&mut rng), h_range.ind_sample(&mut rng));
 
-        let ((dest_x1, dest_y1), (dest_x2, dest_y2)) = line(&w_range, &h_range, &mut rng);
+        let ((dest_x1, dest_y1), (dest_x2, dest_y2)) = gen.line(10);
 
         // let (dest_x1, dest_y1) = (100u32, 120u32);
         // let (dest_x2, dest_y2) = (150u32, 80u32);
@@ -176,7 +151,7 @@ fn run(iterations: usize) {
     let _ = buf.save(&Path::new("test.png")).unwrap();
 }
 
-fn main() {
+fn bench() {
     let num_outer_iter = 10;
     let num_inner_iter = 100_000;
 
@@ -185,7 +160,7 @@ fn main() {
     let start_time = chrono::Utc::now();
 
     for i in 0..num_outer_iter {
-        run(num_inner_iter);
+        run(num_inner_iter, false);
         println!("Iteration {}/{} done", i + 1, num_outer_iter);
     }
 
@@ -195,4 +170,9 @@ fn main() {
 
     println!("{} iterations completed in {}", num_iter, elapsed);
     println!("{}ns/iter", nanos as f64 / num_iter as f64)
+}
+
+fn main() {
+    run(1_000_000, true);
+    // bench();
 }
