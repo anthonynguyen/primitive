@@ -17,6 +17,6 @@ pub fn new(settings: Settings) -> Result<Context> {
 	let img = open(&settings.input_file)?.to_rgb();
     let (w, h) = img.dimensions();
 
-    let gen = Generator::new(w, h, settings.min_angle, settings.max_angle);
+    let gen = Generator::new(w, h, settings.min_angle, settings.max_angle)?;
 	Ok(Context { image: img, w, h, generator: gen, settings })
 }

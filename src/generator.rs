@@ -1,51 +1,35 @@
 use std::cmp;
 
-use rand;
-use rand::distributions::{IndependentSample, Range};
-use rand::ThreadRng;
+use rand::{Rng, StdRng};
+
+use errors::*;
 
 pub struct Generator {
     xmax: u32,
     ymax: u32,
 
-    xrange: Range<u32>,
-    yrange: Range<u32>,
+    amin: u32,
+    amax: u32,
 
-    arange: Range<u32>,
-
-    rng: ThreadRng
+    rng: StdRng
 }
 
 impl Generator {
-    pub fn new(xmax: u32, ymax: u32, amin: u32, amax: u32) -> Self {
-        let xrange = Range::new(0, xmax);
-        let yrange = Range::new(0, ymax);
-
-        let arange = Range::new(amin, amax);
-
-        let rng = rand::thread_rng();
-
-        Generator {
-            xmax,
-            ymax,
-
-            xrange,
-            yrange,
-
-            arange,
-
-            rng
-        }
+    pub fn new(xmax: u32, ymax: u32, amin: u32, amax: u32) -> Result<Self> {
+        Ok(Generator {
+            xmax, ymax, amin, amax,
+            rng: StdRng::new()?
+        })
     }
 
     fn angle(&mut self) -> u32 {
-        self.arange.ind_sample(&mut self.rng)
+        self.rng.gen_range(self.amin, self.amax)
     }
 
     pub fn point(&mut self) -> (u32, u32) {
         (
-            self.xrange.ind_sample(&mut self.rng),
-            self.yrange.ind_sample(&mut self.rng)
+            self.rng.gen_range(0, self.xmax),
+            self.rng.gen_range(0, self.ymax)
         )
     }
 

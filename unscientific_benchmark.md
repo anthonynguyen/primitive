@@ -1,4 +1,8 @@
-# UNSCIENTIFIC EXPERIMENT CONDITIONS
+# UNSCIENTIFIC BENCHMARKS
+
+This is just for tracking the performance of the program as I develop it.
+
+## conditions
 
 * input file: `example_s.png`
 * outer iterations: `10`
@@ -34,3 +38,5 @@ cargo run --release -- -i example_s.png -n 100000 --line-length 25 bench --bench
 	* store expensive stuff in a 'context'
 		+ load the source image once (instead of bench_iters times)
 		+ create the rng once (instead of bench_iters times)
+8. `~580 ns/iter`
+	* use StdRng instead of ThreadRng
