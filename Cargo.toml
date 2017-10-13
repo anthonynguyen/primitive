@@ -19,3 +19,6 @@ image = "0.16.0"
 log = "0.3.8"
 loglog = "0.3.2"
 rand = "0.3.17"
+
+[badges]
+travis-ci = { repository = "anthonynguyen/primitive" }

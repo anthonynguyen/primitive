@@ -1,13 +1,27 @@
 # `primitive`
 
+[![primitive on Travis CI][travis-image]][travis]
+[![primitive on crates.io][cratesio-image]][cratesio]
+
+[travis-image]: https://travis-ci.org/anthonynguyen/primitive.svg?branch=master
+[travis]: https://travis-ci.org/anthonynguyen/primitive
+[cratesio-image]: https://img.shields.io/crates/v/primitive.svg
+[cratesio]: https://crates.io/crates/primitive
+
 primitive is a Rust program that approximates images by drawing random lines.
 
-## Running
+## Installing
 
 Assuming you have Rust installed, run
 
 ```
 cargo install primitive
+```
+
+Alternatively, you can run it from the source directory with
+
+```
+cargo run --release -- ...OPTIONS...
 ```
 
 ## Samples
@@ -64,5 +78,5 @@ SUBCOMMANDS:
 
 ## License
 
-primitive is licensed under the MIT license. Please see the `LICENSE` file for
+`primitive` is licensed under the MIT license. Please see the `LICENSE` file for
 more details.
