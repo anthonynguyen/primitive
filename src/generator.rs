@@ -2,6 +2,7 @@ use std::cmp;
 
 use rand::{Rng, StdRng};
 
+use bresenham;
 use errors::*;
 
 pub struct Generator {
@@ -33,10 +34,10 @@ impl Generator {
         )
     }
 
-    // Generate a random line by generating an initial point, and a displacement
-    // vector. The resulting final point is clamped to fit within the image
-    // boundaries
-    pub fn line(&mut self, len: u32) -> ((u32, u32), (u32, u32)) {
+    // Generate a pair of points by generating an initial point, and a
+    // displacement vector. The resulting final point is clamped to fit within
+    // the image boundaries
+    fn endpoints(&mut self, len: u32) -> ((u32, u32), (u32, u32)) {
         let p1 = self.point();
         let angle = (self.angle() as f64).to_radians();
 
@@ -48,6 +49,31 @@ impl Generator {
         );
 
         (p1, p2)
+    }
+
+    pub fn line(&mut self, len: u32) -> Vec<(u32, u32)> {
+        let (p1, p2) = self.endpoints(len);
+        bresenham::points(p1, p2)
+    }
+
+    pub fn rect(&mut self, len: u32) -> Vec<(u32, u32)> {
+        let (p1, p2) = self.endpoints(len);
+
+        let minx = cmp::min(p1.0, p2.0);
+        let maxx = cmp::max(p1.0, p2.0);
+
+        let miny = cmp::min(p1.1, p2.1);
+        let maxy = cmp::max(p1.1, p2.1);
+
+        let mut res = Vec::new();
+
+        for x in minx..maxx {
+            for y in miny..maxy {
+                res.push((x, y))
+            }
+        }
+
+        res
     }
 }
 

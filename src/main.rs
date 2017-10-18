@@ -36,8 +36,8 @@ fn single(ctx: &mut context::Context) -> Result<()> {
         let (sample_x, sample_y) = ctx.generator.point();
         let sample_pixel = ctx.image.get_pixel(sample_x, sample_y).clone();
 
-        let ((x1, y1), (x2, y2)) = ctx.generator.line(ctx.settings.line_length);
-        let points = bresenham::points((x1, y1), (x2, y2));
+        let points = ctx.generator.line(ctx.settings.line_length);
+        // let points = ctx.generator.rect(ctx.settings.line_length);
 
         let mut before_dist = 0;
         let mut after_dist = 0;
